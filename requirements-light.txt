@@ -1,0 +1,9 @@
+# Use this file instead of requirements.txt if Render's free tier
+# runs out of memory (512MB limit). Drops TensorFlow / LSTM support.
+# Rename to requirements.txt before deploying.
+flask==3.0.3
+gunicorn==23.0.0
+scikit-learn==1.5.2
+pandas==2.2.3
+numpy==1.26.4
+nltk==3.9.1

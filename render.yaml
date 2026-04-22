@@ -1,0 +1,20 @@
+# Render Blueprint - automatically configures the deployment.
+# Commit this file to Git and Render will use it.
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: fake-news-detector
+    runtime: python
+    region: oregon
+    plan: free
+    buildCommand: "pip install --upgrade pip && pip install -r requirements.txt"
+    # --timeout 120: give TensorFlow time to load LSTM model on cold start
+    # --workers 1: critical on 512 MB free tier, more workers = OOM
+    # --preload: loads the app once before forking workers (avoids double model load)
+    startCommand: "gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 120 --preload app:app"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+    healthCheckPath: /health
+    autoDeploy: true
