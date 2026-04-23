@@ -3,90 +3,184 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TF-IDF + Logistic Regression</title>
-  <link rel="stylesheet" href="static/style.css" />
+  <title>Pratik Daund · Fake News Detector</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <div class="top-strip">
-    <div class="ticker">
-      News + TFIDF + Logistic Regression + Sustainable Projects + Fake News Detection + NLP + News + Fake News + Classification Projects +
-    </div>
-  </div>
-
+  <!-- Header -->
   <header class="site-header">
-    <div class="brand">PD.<span>daund</span></div>
-    <nav class="nav">
-      <a href="#">GITHUB</a>
-      <a href="#">METHOD</a>
-      <a href="#">LIMITATIONS</a>
-    </nav>
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-mark">PD<span class="dot">.</span></span>
+        <span class="brand-name">Daund</span>
+      </div>
+      <nav class="nav">
+        <a href="#system">System</a>
+        <a href="#method">Method</a>
+        <a href="#limits">Limitations</a>
+      </nav>
+    </div>
+    <div class="ticker">
+      <span>Fake News Detection · TF-IDF ·  Flask · ISOT Dataset · Internship Project ·&nbsp;</span>
+      <span>Fake News Detection · TF-IDF ·  Flask · ISOT Dataset · Internship Project ·&nbsp;</span>
+    </div>
   </header>
 
-  <main class="page">
+  <main class="container">
+    <!-- Hero -->
     <section class="hero">
-      <div class="eyebrow-row">
-        <span class="tag">INTERACTIVE PROJECT</span>
-        <span class="tag">TF-IDF</span>
-        <span class="tag">LOGISTIC REGRESSION</span>
-      </div>
-
-      <h1>
-        Classify the <span>veracity</span> of news<br />
+      <p class="eyebrow">Internship Project · TF-IDF + Logistic Regression </p>
+      <h1 class="display">
+        Classify the <em>veracity</em> of news<br>
         with Machine learning.
       </h1>
-
-      <p class="intro">
-        Paste any news article below. The TF-IDF (term frequency, inverse document frequency)
-        vectorizer and classifier score the headline or story for fake or truthful detection.
+      <p class="lede">
+        Paste any news article below. TF-IDF logistic
+        regression baseline ; return a label
+        and a confidence score. Trained on the ISOT dataset.
       </p>
+    </section>
 
-      <div class="analyzer-card">
-        <div class="card-header">
-          <label for="headline">TF-IDF + LOGISTIC REGRESSION</label>
-          <input id="headline" type="text" />
+    <!-- Form -->
+    <section class="form-wrap" id="system">
+      <div class="form">
+        <div class="model-toggle">
+          {% if 'logreg' in models %}
+          <label class="active" data-model="logreg">
+            <input type="radio" name="model" value="logreg" checked>
+            <span class="label-text">TF-IDF + Logistic Regression</span>
+            <span class="label-sub">Fast baseline</span>
+          </label>
+          {% endif %}
+          {% if 'lstm' in models %}
+          <label data-model="lstm">
+            <input type="radio" name="model" value="lstm">
+           
+           
+          </label>
+          {% endif %}
+          {% if not models %}
+          <div class="no-models">
+            No trained models found. Run <code>python train.py</code> first.
+          </div>
+          {% endif %}
         </div>
 
-        <div class="action-row">
-          <button type="button">USE SAMPLE REAL ARTICLE</button>
-          <button type="button">USE SAMPLE FAKE ARTICLE</button>
+        <div class="sample-row">
+          <button type="button" class="btn-chip" id="load-real">Load sample REAL article</button>
+          <button type="button" class="btn-chip" id="load-fake">Load sample FAKE article</button>
         </div>
 
-        <textarea placeholder="Paste the headline text here. Include the body of article"></textarea>
+        <textarea
+          id="article-text"
+          class="textarea"
+          rows="10"
+          placeholder="Paste the full article text here. Include the headline if available."></textarea>
 
-        <div class="card-footer">
-          <div class="meta">0 characters • 0 words</div>
-          <div class="footer-actions">
-            <button type="button" class="btn-light">CLEAR</button>
-            <button type="button" class="btn-dark">ANALYZE ARTICLE</button>
+        <div class="meta-row">
+          <span class="char-count" id="char-count">0 characters · 0 words</span>
+          <div class="button-row">
+            <button type="button" class="btn-ghost" id="clear-btn">Clear</button>
+            <button type="button" class="btn-primary" id="analyse-btn" {% if not models %}disabled{% endif %}>
+              Analyse article
+            </button>
           </div>
         </div>
       </div>
+
+      <!-- Status messages -->
+      <div class="error hidden" id="error-box"></div>
+
+      <!-- Loading spinner -->
+      <div class="loading hidden" id="loading-box">
+        <div class="spinner"></div>
+        <p>Analysing article&hellip;</p>
+      </div>
+
+      <!-- Result -->
+      <div class="result hidden" id="result-box">
+        <div class="result-top">
+          <div>
+            <p class="result-kicker">Verdict</p>
+            <h2 class="result-label" id="result-label">—</h2>
+          </div>
+          <div class="result-confidence">
+            <p class="result-kicker">Confidence</p>
+            <p class="result-pct" id="result-pct">—</p>
+          </div>
+        </div>
+
+        <div class="bar">
+          <div class="bar-fill" id="bar-fill"></div>
+        </div>
+
+        <dl class="result-meta">
+          <div>
+            <dt>Model</dt>
+            <dd id="result-model">—</dd>
+          </div>
+          <div>
+            <dt>Tokens analysed</dt>
+            <dd id="result-tokens">—</dd>
+          </div>
+          <div>
+            <dt>Status</dt>
+            <dd id="result-status">—</dd>
+          </div>
+        </dl>
+
+        <details class="result-details">
+          <summary>Detailed probabilities</summary>
+          <p>P(REAL) = <code id="p-real">—</code></p>
+          <p>P(FAKE) = <code id="p-fake">—</code></p>
+          <p>Decision threshold = <code>0.5</code></p>
+        </details>
+
+        <details class="result-details">
+          <summary>Preprocessed text (what the model actually sees)</summary>
+          <pre id="cleaned-text" class="cleaned"></pre>
+        </details>
+
+        <div class="result-warning hidden" id="low-conf-warning">
+          Low confidence &mdash; the model is uncertain about this article.
+          Treat the verdict with scepticism.
+        </div>
+      </div>
     </section>
 
-    <section class="info-block">
-      <h2>Method</h2>
+    <!-- Info sections -->
+    <section class="info" id="method">
+      <h2 class="info-head">Method</h2>
       <p>
-        The tool is trained with a TF-IDF preprocessing step and a standard Scikit-learn model.
-        The model learns from frequency-based textual patterns and returns a prediction for the
-        entered article. TF-IDF weighs helpful signals while reducing emphasis on very common words.
+        The text is lowercased, stripped of URLs and punctuation, and lemmatised.
+        Stopwords are removed. The cleaned text is then scored by one of two
+        supervised models &mdash; either a TF-IDF weighted logistic regression  with a 64-dimensional trainable embedding layer.
       </p>
     </section>
 
-    <section class="info-block">
-      <h2>Limitations</h2>
-      <ul>
-        <li>Predictions are dataset-based and may not generalize to real-world cases.</li>
-        <li>Short text can reduce model reliability.</li>
-        <li>Context, source credibility, and nuance may not always be fully captured.</li>
-        <li>A wrong input format can also impact the classifier.</li>
+    <section class="info" id="limits">
+      <h2 class="info-head">Limitations</h2>
+      <ul class="info-list">
+        <li>Trained on one dataset (ISOT); may not generalise to real-world news.</li>
+        <li>Performs best on English, news-style writing.</li>
+        <li>Cannot detect satire, manipulated imagery, or factual errors in otherwise well-written prose.</li>
+        <li>An academic demonstrator, not a production fact-checker.</li>
       </ul>
     </section>
+
+    <footer class="footer">
+      <p>
+        <strong>Academic disclaimer.</strong> This model was trained on the ISOT
+        Fake News Dataset. Its predictions reflect the patterns in that specific
+        corpus and should not be used as a sole arbiter of truth. Always
+        cross-check with reputable sources.
+      </p>
+    </footer>
   </main>
 
-  <footer class="site-footer">
-    Copyright © Made by Pratik Daund, Prateek Rasalkar, Aman Rathod, Sahil Mahamune. Deployed on 22/04/2026.
-  </footer>
-
-  <script src="static/script.js"></script>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
