@@ -1,186 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pratik Daund · Fake News Detector</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fake News Detector</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Playfair+Display&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
-  <!-- Header -->
-  <header class="site-header">
-    <div class="header-inner">
-      <div class="brand">
-        <span class="brand-mark">PD<span class="dot">.</span></span>
-        <span class="brand-name">Daund</span>
-      </div>
-      <nav class="nav">
-        <a href="#system">System</a>
-        <a href="#method">Method</a>
-        <a href="#limits">Limitations</a>
-      </nav>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo">📰 FakeNews AI</div>
+  <nav>
+    <a href="#system">System</a>
+    <a href="#method">Method</a>
+    <a href="#limits">Limitations</a>
+  </nav>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <h1>Detect Fake News Instantly</h1>
+  <p>Paste any news article and let AI classify it with confidence.</p>
+</section>
+
+<!-- MAIN -->
+<main class="container">
+
+  <!-- MODEL SELECT -->
+  <div class="model-select">
+    {% if 'logreg' in models %}
+    <label>
+      <input type="radio" name="model" value="logreg" checked>
+      TF-IDF + Logistic Regression
+    </label>
+    {% endif %}
+
+    {% if 'lstm' in models %}
+    <label>
+      <input type="radio" name="model" value="lstm">
+      LSTM Model
+    </label>
+    {% endif %}
+
+    {% if not models %}
+    <p class="error">No trained models found. Run train.py first.</p>
+    {% endif %}
+  </div>
+
+  <!-- INPUT -->
+  <div class="card" id="system">
+    <textarea id="article-text" placeholder="Paste full news article here..."></textarea>
+
+    <div class="actions">
+      <button id="clear-btn" class="btn-clear">Clear</button>
+      <button id="analyse-btn" class="btn-analyse" {% if not models %}disabled{% endif %}>
+        Analyse
+      </button>
     </div>
-    <div class="ticker">
-      <span>Fake News Detection · TF-IDF ·  Flask · ISOT Dataset · Internship Project ·&nbsp;</span>
-      <span>Fake News Detection · TF-IDF ·  Flask · ISOT Dataset · Internship Project ·&nbsp;</span>
+  </div>
+
+  <!-- LOADING -->
+  <div id="loading-box" class="loading hidden">
+    <div class="spinner"></div>
+    <p>Analyzing article...</p>
+  </div>
+
+  <!-- ERROR -->
+  <div id="error-box" class="error hidden"></div>
+
+  <!-- RESULT -->
+  <div id="result-box" class="result hidden">
+    <h2 id="result-label">—</h2>
+    <p id="result-pct">—</p>
+
+    <div class="bar">
+      <div id="bar-fill"></div>
     </div>
-  </header>
 
-  <main class="container">
-    <!-- Hero -->
-    <section class="hero">
-      <p class="eyebrow">Internship Project · TF-IDF + Logistic Regression </p>
-      <h1 class="display">
-        Classify the <em>veracity</em> of news<br>
-        with Machine learning.
-      </h1>
-      <p class="lede">
-        Paste any news article below. TF-IDF logistic
-        regression baseline ; return a label
-        and a confidence score. Trained on the ISOT dataset.
-      </p>
-    </section>
+    <p><strong>Model:</strong> <span id="result-model"></span></p>
+    <p><strong>Tokens:</strong> <span id="result-tokens"></span></p>
 
-    <!-- Form -->
-    <section class="form-wrap" id="system">
-      <div class="form">
-        <div class="model-toggle">
-          {% if 'logreg' in models %}
-          <label class="active" data-model="logreg">
-            <input type="radio" name="model" value="logreg" checked>
-            <span class="label-text">TF-IDF + Logistic Regression</span>
-            <span class="label-sub">Fast baseline</span>
-          </label>
-          {% endif %}
-          {% if 'lstm' in models %}
-          <label data-model="lstm">
-            <input type="radio" name="model" value="lstm">
-           
-           
-          </label>
-          {% endif %}
-          {% if not models %}
-          <div class="no-models">
-            No trained models found. Run <code>python train.py</code> first.
-          </div>
-          {% endif %}
-        </div>
+    <details>
+      <summary>Detailed probabilities</summary>
+      <p>P(REAL): <span id="p-real"></span></p>
+      <p>P(FAKE): <span id="p-fake"></span></p>
+    </details>
 
-        <div class="sample-row">
-          <button type="button" class="btn-chip" id="load-real">Load sample REAL article</button>
-          <button type="button" class="btn-chip" id="load-fake">Load sample FAKE article</button>
-        </div>
+    <div id="low-conf-warning" class="warning hidden">
+      Low confidence prediction. Verify manually.
+    </div>
+  </div>
 
-        <textarea
-          id="article-text"
-          class="textarea"
-          rows="10"
-          placeholder="Paste the full article text here. Include the headline if available."></textarea>
+  <!-- INFO -->
+  <section id="method" class="info">
+    <h2>Method</h2>
+    <p>
+      Text is processed using TF-IDF and classified using Logistic Regression or LSTM.
+    </p>
+  </section>
 
-        <div class="meta-row">
-          <span class="char-count" id="char-count">0 characters · 0 words</span>
-          <div class="button-row">
-            <button type="button" class="btn-ghost" id="clear-btn">Clear</button>
-            <button type="button" class="btn-primary" id="analyse-btn" {% if not models %}disabled{% endif %}>
-              Analyse article
-            </button>
-          </div>
-        </div>
-      </div>
+  <section id="limits" class="info">
+    <h2>Limitations</h2>
+    <ul>
+      <li>Trained on ISOT dataset</li>
+      <li>Works best on English text</li>
+      <li>Cannot detect satire or images</li>
+    </ul>
+  </section>
 
-      <!-- Status messages -->
-      <div class="error hidden" id="error-box"></div>
+</main>
 
-      <!-- Loading spinner -->
-      <div class="loading hidden" id="loading-box">
-        <div class="spinner"></div>
-        <p>Analysing article&hellip;</p>
-      </div>
+<!-- FOOTER -->
+<footer class="footer">
+  <p>
+    Copyright © Made by 
+    <strong>Pratik Daund</strong>, 
+    <strong>Prateek Rasalkar</strong>, 
+    <strong>Aman Rathod</strong>, 
+    <strong>Sahil Mahamune</strong>.
+  </p>
+  <p class="date">Deployed on 22/04/2026</p>
+</footer>
 
-      <!-- Result -->
-      <div class="result hidden" id="result-box">
-        <div class="result-top">
-          <div>
-            <p class="result-kicker">Verdict</p>
-            <h2 class="result-label" id="result-label">—</h2>
-          </div>
-          <div class="result-confidence">
-            <p class="result-kicker">Confidence</p>
-            <p class="result-pct" id="result-pct">—</p>
-          </div>
-        </div>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
 
-        <div class="bar">
-          <div class="bar-fill" id="bar-fill"></div>
-        </div>
-
-        <dl class="result-meta">
-          <div>
-            <dt>Model</dt>
-            <dd id="result-model">—</dd>
-          </div>
-          <div>
-            <dt>Tokens analysed</dt>
-            <dd id="result-tokens">—</dd>
-          </div>
-          <div>
-            <dt>Status</dt>
-            <dd id="result-status">—</dd>
-          </div>
-        </dl>
-
-        <details class="result-details">
-          <summary>Detailed probabilities</summary>
-          <p>P(REAL) = <code id="p-real">—</code></p>
-          <p>P(FAKE) = <code id="p-fake">—</code></p>
-          <p>Decision threshold = <code>0.5</code></p>
-        </details>
-
-        <details class="result-details">
-          <summary>Preprocessed text (what the model actually sees)</summary>
-          <pre id="cleaned-text" class="cleaned"></pre>
-        </details>
-
-        <div class="result-warning hidden" id="low-conf-warning">
-          Low confidence &mdash; the model is uncertain about this article.
-          Treat the verdict with scepticism.
-        </div>
-      </div>
-    </section>
-
-    <!-- Info sections -->
-    <section class="info" id="method">
-      <h2 class="info-head">Method</h2>
-      <p>
-        The text is lowercased, stripped of URLs and punctuation, and lemmatised.
-        Stopwords are removed. The cleaned text is then scored by one of two
-        supervised models &mdash; either a TF-IDF weighted logistic regression  with a 64-dimensional trainable embedding layer.
-      </p>
-    </section>
-
-    <section class="info" id="limits">
-      <h2 class="info-head">Limitations</h2>
-      <ul class="info-list">
-        <li>Trained on one dataset (ISOT); may not generalise to real-world news.</li>
-        <li>Performs best on English, news-style writing.</li>
-        <li>Cannot detect satire, manipulated imagery, or factual errors in otherwise well-written prose.</li>
-        <li>An academic demonstrator, not a production fact-checker.</li>
-      </ul>
-    </section>
-
-    <footer class="footer">
-      <p>
-        <strong>Academic disclaimer.</strong> This model was trained on the ISOT
-        Fake News Dataset. Its predictions reflect the patterns in that specific
-        corpus and should not be used as a sole arbiter of truth. Always
-        cross-check with reputable sources.
-      </p>
-    </footer>
-  </main>
-
-  <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
