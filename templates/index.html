@@ -24,22 +24,22 @@
       </nav>
     </div>
     <div class="ticker">
-      <span>Fake News Detection · TF-IDF · Bi-LSTM · Flask · NLP · ISOT Dataset · M.Tech Dissertation Project ·&nbsp;</span>
-      <span>Fake News Detection · TF-IDF · Bi-LSTM · Flask · NLP · ISOT Dataset · M.Tech Dissertation Project ·&nbsp;</span>
+      <span>Fake News Detection · TF-IDF ·  Flask · ISOT Dataset · Internship Project ·&nbsp;</span>
+      <span>Fake News Detection · TF-IDF ·  Flask · ISOT Dataset · Internship Project ·&nbsp;</span>
     </div>
   </header>
 
   <main class="container">
     <!-- Hero -->
     <section class="hero">
-      <p class="eyebrow">M.Tech Project · NLP + Deep Learning</p>
+      <p class="eyebrow">Internship Project · TF-IDF + Logistic Regression </p>
       <h1 class="display">
         Classify the <em>veracity</em> of news<br>
-        with NLP and deep learning.
+        with Machine learning.
       </h1>
       <p class="lede">
-        Paste any news article below. Two models &mdash; a TF-IDF logistic
-        regression baseline and a bidirectional LSTM &mdash; return a label
+        Paste any news article below. TF-IDF logistic
+        regression baseline ; return a label
         and a confidence score. Trained on the ISOT dataset.
       </p>
     </section>
@@ -58,8 +58,8 @@
           {% if 'lstm' in models %}
           <label data-model="lstm">
             <input type="radio" name="model" value="lstm">
-            <span class="label-text">Bidirectional LSTM</span>
-            <span class="label-sub">Deep learning</span>
+           
+           
           </label>
           {% endif %}
           {% if not models %}
@@ -157,8 +157,7 @@
       <p>
         The text is lowercased, stripped of URLs and punctuation, and lemmatised.
         Stopwords are removed. The cleaned text is then scored by one of two
-        supervised models &mdash; either a TF-IDF weighted logistic regression or
-        a bidirectional LSTM with a 64-dimensional trainable embedding layer.
+        supervised models &mdash; either a TF-IDF weighted logistic regression  with a 64-dimensional trainable embedding layer.
       </p>
     </section>
 
